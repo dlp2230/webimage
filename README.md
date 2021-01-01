@@ -5,6 +5,8 @@
 ## 二进制文件给权限
 ### chmod +x main
 
+#### config.yaml 跟着二进制执行文件 同目录·
+
 ```bash
 # 使用 cli 可执行二进制文件
 cd cli
