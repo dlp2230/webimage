@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/idoubi/goz"
-	"github.com/qiniu/api.v7/v7/auth/qbox"
-	"github.com/qiniu/api.v7/v7/storage"
-	"log"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/qiniu/api.v7/v7/auth/qbox"
+	"github.com/qiniu/api.v7/v7/storage"
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"os"
@@ -17,21 +19,53 @@ import (
 	"text/template"
 	"time"
 	"webimage/asset"
-	assetfs "github.com/elazarl/go-bindata-assetfs"
 )
 
 var (
 	DBM *gorm.DB
 	DBS *gorm.DB
+	GVA_CONFIG *Server
+	GVA_LOG    *zap.Logger
 )
 
-//定义数据库连接
-type ConnInfo struct {
-	MyUser string
-	Password string
-	Host string
-	Port int
-	Db string
+type Server struct {
+	// gorm
+	Mysql Mysql `mapstructure:"mysql" json:"mysql" yaml:"mysql"`
+	Qiniu Qiniu `mapstructure:"qiniu" json:"qiniu" yaml:"qiniu"`
+	BaiduAi BaiduAi `mapstructure:"baidu-ai" json:"baiduAi" yaml:"baidu-ai"`
+	System  System  `mapstructure:"system" json:"system" yaml:"system"`
+}
+
+type System struct {
+	Env           string `mapstructure:"env" json:"env" yaml:"env"`
+	Addr          string    `mapstructure:"addr" json:"addr" yaml:"addr"`
+}
+
+type Mysql struct {
+	Host         string `mapstructure:"host" json:"Host" yaml:"host"`
+	Config       string `mapstructure:"config" json:"config" yaml:"config"`
+	Dbname       string `mapstructure:"db-name" json:"dbname" yaml:"db-name"`
+	Username     string `mapstructure:"username" json:"username" yaml:"username"`
+	Password     string `mapstructure:"password" json:"password" yaml:"password"`
+	Port         int   	`mapstructure:"port" json:"password" yaml:"port"`
+	MaxIdleConns int    `mapstructure:"max-idle-conns" json:"maxIdleConns" yaml:"max-idle-conns"`
+	MaxOpenConns int    `mapstructure:"max-open-conns" json:"maxOpenConns" yaml:"max-open-conns"`
+	LogMode      bool   `mapstructure:"log-mode" json:"logMode" yaml:"log-mode"`
+}
+
+type Qiniu struct {
+	Zone          string `mapstructure:"zone" json:"zone" yaml:"zone"`
+	Bucket        string `mapstructure:"bucket" json:"bucket" yaml:"bucket"`
+	ImgPath       string `mapstructure:"img-path" json:"imgPath" yaml:"img-path"`
+	UseHTTPS      bool   `mapstructure:"use-https" json:"useHttps" yaml:"use-https"`
+	AccessKey     string `mapstructure:"access-key" json:"accessKey" yaml:"access-key"`
+	SecretKey     string `mapstructure:"secret-key" json:"secretKey" yaml:"secret-key"`
+	UseCdnDomains bool   `mapstructure:"use-cdn-domains" json:"useCdnDomains" yaml:"use-cdn-domains"`
+}
+
+type BaiduAi struct {
+	AppKey		string `mapstructure:"app-key" json:"appKey" yaml:"app-key"`
+	AppSecretKey		string `mapstructure:"app-secret-key" json:"appSecretKey" yaml:"app-secret-key"`
 }
 
 // return data
@@ -54,26 +88,34 @@ var (
 )
 
 func init() {
-	//正式数据库配置
-	cn := ConnInfo{
-		"applereservation",
-		"Js3jjrMz2dWb7DnN",
-		"47.88.2.29",
-		3306,
-		"applereservation",
+	path, err := os.Getwd()
+	if err != nil {
+		GVA_LOG.Error("文件加载~",zap.Any("err",err))
+	}
+	config := viper.New()
+	config.AddConfigPath(path)
+	config.SetConfigName("./config")
+	config.SetConfigType("yaml")
+	if err := config.ReadInConfig(); err != nil {
+		GVA_LOG.Error("读取配置",zap.Any("err",err))
+	}
+	if err = config.Unmarshal(&GVA_CONFIG); err != nil {
+		GVA_LOG.Error("隐射配置",zap.Any("err",err))
 	}
 
-	DBS = DbConn(cn.MyUser,cn.Password,cn.Host,cn.Db,cn.Port)
-	DBS.LogMode(true)
-	DBM = DbConn(cn.MyUser,cn.Password,cn.Host,cn.Db,cn.Port)
-	defer DBM.Close()
+	DBS = DbConn(GVA_CONFIG.Mysql.Username,GVA_CONFIG.Mysql.Password,GVA_CONFIG.Mysql.Host,GVA_CONFIG.Mysql.Dbname,GVA_CONFIG.Mysql.Port)
+	DBS.DB().SetMaxIdleConns(GVA_CONFIG.Mysql.MaxIdleConns)                   //最大空闲连接数
+	DBS.DB().SetMaxOpenConns(GVA_CONFIG.Mysql.MaxOpenConns)                   //最大连接数
+	DBS.DB().SetConnMaxLifetime(time.Second * 300)                            //设置连接空闲超时
+	DBS.LogMode(GVA_CONFIG.Mysql.LogMode)
+	// defer DBS.Close()
 }
 
 func DbConn(MyUser, Password, Host, Db string, Port int) *gorm.DB {
 	connArgs := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",  MyUser,Password, Host, Port, Db )
 	db, err := gorm.Open("mysql", connArgs)
 	if err != nil {
-		log.Fatal(err)
+		GVA_LOG.Error("Mysql链接错误:",zap.Any("err",err))
 	}
 	db.SingularTable(true)
 	return db
@@ -88,7 +130,7 @@ func webimageInfo(w http.ResponseWriter,r *http.Request) {
 
 	t = template.Must(t, err)
 	if err != nil {
-		panic(err)
+		GVA_LOG.Error("百度模板加载:",zap.Any("err",err))
 	}
 	var fileList = make(map[string]interface{})
 
@@ -163,8 +205,7 @@ func saveCard(w http.ResponseWriter, r *http.Request)  {
 func uploadImage(w http.ResponseWriter, r *http.Request)  {
 	file, head, err := r.FormFile("file")
 	if err != nil {
-		fmt.Println(err)
-		return
+		GVA_LOG.Error("上传图片:",zap.Any("err",err))
 	}
 	defer file.Close()
 	//创建文件夹
@@ -176,16 +217,14 @@ func uploadImage(w http.ResponseWriter, r *http.Request)  {
 	}
 	fW, err := os.Create(pwd + upload_path + head.Filename)
 	if err != nil {
-		fmt.Println("文件创建失败")
-		return
+		GVA_LOG.Error("文件创建失败:",zap.Any("err",err))
 	}
 	fmt.Println(*fW)
 	defer fW.Close()
 	//复制文件，保存到本地
 	_, err = io.Copy(fW, file)
 	if err != nil {
-		fmt.Println("文件保存失败")
-		return
+		GVA_LOG.Error("文件保存失败:",zap.Any("err",err))
 	}
 	imageUrl :=upload_qiniu(pwd + upload_path + head.Filename)
 	//获取baidu-accessToken
@@ -200,9 +239,9 @@ func uploadImage(w http.ResponseWriter, r *http.Request)  {
 			"url": imageUrl,
 		},
 	})
-	//if err != nil {
-	//	global.GVA_LOG.Error("baidu ai-image request err", zap.Any("err", err))
-	//}
+	if err != nil {
+		GVA_LOG.Error("请求百度ai接口失败:",zap.Any("err",err))
+	}
 	body,_ := resp.GetBody()
 	type BdImgResponeData struct {
 		LogId uint `json:"log_id"`
@@ -227,9 +266,9 @@ func uploadImage(w http.ResponseWriter, r *http.Request)  {
 func upload_qiniu(filePath string) (imageUrl string){
 	key := "webimage"+ GetDateYMDHis() +".png"
 	putPolicy := storage.PutPolicy{
-		Scope: BUCKET,
+		Scope: GVA_CONFIG.Qiniu.Bucket,
 	}
-	mac := qbox.NewMac(ACCESS_KEY, SECRET_KEY)
+	mac := qbox.NewMac(GVA_CONFIG.Qiniu.AccessKey, GVA_CONFIG.Qiniu.SecretKey)
 	upToken := putPolicy.UploadToken(mac)
 	cfg := storage.Config{}
 	cfg.Zone = &storage.ZoneHuanan
@@ -246,11 +285,10 @@ func upload_qiniu(filePath string) (imageUrl string){
 	}
 	err := formUploader.PutFile(context.Background(), &ret, upToken, key, filePath, &putExtra)
 	if err != nil {
-		fmt.Println(err)
-		return
+		GVA_LOG.Error("图片上传七牛失败~:",zap.Any("err",err))
 	}
 	fmt.Println(ret.Key)
-	imageUrl = IMAGE_PATH + ret.Key
+	imageUrl = GVA_CONFIG.Qiniu.ImgPath + ret.Key
 	//fmt.Println(ret.Key, ret.Hash)
 	return
 }
@@ -292,8 +330,8 @@ func getBaiduAccessToken() (accessToken string) {
 	url :="https://aip.baidubce.com/oauth/2.0/token"
 	postParam := make(map[string]interface{})
 	postParam["grant_type"] = "client_credentials"
-	postParam["client_id"] = "bLmOZEzmmAIHZGojuWx4Ie4z"
-	postParam["client_secret"] = "f7B6WYBS8WOwwhTarmNWj0cq2WuH5QY5"
+	postParam["client_id"] = GVA_CONFIG.BaiduAi.AppKey
+	postParam["client_secret"] = GVA_CONFIG.BaiduAi.AppSecretKey
 	cli := goz.NewClient()
 	resp, err := cli.Get(url, goz.Options{
 		Query: postParam,
@@ -328,6 +366,6 @@ func main()  {
 	http.HandleFunc("/webimage/uploadImage",uploadImage) //upload image~
 	http.HandleFunc("/webimage/saveCard",saveCard) //save card~
 
-	http.ListenAndServe(":8009", nil)
+	http.ListenAndServe(":"+GVA_CONFIG.System.Addr, nil)
 
 }

@@ -7,5 +7,5 @@ go.sum
 /latest_log
 
 *.iml
-config.yaml
+server/config.yaml
 *.exe
