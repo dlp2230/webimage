@@ -117,7 +117,7 @@ func DbConn(MyUser, Password, Host, Db string, Port int) *gorm.DB {
 func webimageInfo(w http.ResponseWriter,r *http.Request) {
 	bytes, err := asset.Asset("public/view/webimage.html")  // 根据地址获取对应内容
 	if err != nil {
-		panic(err)
+		GVA_LOG.Error("页面跑丢了:",zap.Any("err",err))
 	}
 	t, err := template.New("index").Delims("<<", ">>").Parse(string(bytes))      // 比如用于模板处理
 
