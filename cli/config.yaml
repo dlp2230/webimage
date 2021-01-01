@@ -1,0 +1,31 @@
+# system configuration
+system:
+  env: 'public'  # Change to "develop" to skip authentication for development mode
+  addr: '8009'
+
+# mysql config
+mysql:
+  host: "47.88.2.29"
+  config: 'charset=utf8mb4&parseTime=True&loc=Local'
+  db-name: "applereservation"
+  username: "applereservation"
+  password: "Js3jjrMz2dWb7DnN"
+  port: 3306
+  max-idle-conns: 10
+  max-open-conns: 100
+  log-mode: true
+
+# qiniu config
+qiniu:
+  zone: "mp_main"
+  bucket: "expocraftsmen"
+  img-path: "https://expo-img.expocraftsmen.com/"
+  use-https: false
+  access-key: "CKzFTFiQ91LG0kin8_c-eOs8uCSxOn2HGykp5dmr"
+  secret-key: "uCMwldThLJNb0wZsAZqxPVyZBY2pZ5SCmgP7uXBn"
+  use-cdn-domains: false
+
+# baidu ai
+baidu-ai:
+  app-key: 'bLmOZEzmmAIHZGojuWx4Ie4z'
+  app-secret-key: 'f7B6WYBS8WOwwhTarmNWj0cq2WuH5QY5'
