@@ -1,0 +1,177 @@
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>图片设别</title>
+    <meta name="keywords" content="图片设别"/>
+    <meta name="description" content="图片设别"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+    <meta content="yes" name="apple-mobile-web-app-capable" />
+    <meta content="black" name="apple-mobile-web-app-status-bar-style" />
+    <meta content="telephone=no" name="format-detection" />
+    <meta name="jbpro1" content="verifyToken"/>
+    <meta name="jbpro2" content="45330e7233c1e128b84f6f424d6d06e6"/>
+
+    <script type="text/javascript">
+        const baseUrl = "/";
+    </script>
+    <link rel="stylesheet" type="text/css" href="../static/plugin/layer_mobile/need/layer.css"/>
+    <link rel="stylesheet" type="text/css" href="../static/css/base.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/webimage.css">
+    <script type="text/javascript" src="../static/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/plugin/layer_mobile/layer.js"></script>
+    <script type="text/javascript" src="../static/js/rem.js"></script>
+</head>
+
+<body>
+<div class="container" xmlns="http://www.w3.org/1999/html">
+    <div class="main center">
+        <h4 style="width: 7rem;margin: 0 auto;padding-left: .5rem;">礼品卡设别</h4>
+        <!--form start-->
+
+        <form id="save-card" action="/webimage/saveCard" method="post" onsubmit="return false">
+            <!--礼品码选择照片 start-->
+            <div class="form-group">
+                <div class="upload-image">
+                    <img id="gift-card-photo"  class="upload-image-photo" src="../static/images/icon-user.png"/>
+                    <span class="fileinput-button">
+                    <span>礼品码选择照片/拍照上传</span>
+                    <input class="gift-card upload-image-file" id="gift-card" type="file" accept="image/*" capture="user" name="gift_card" onchange="uploadImage('gift-card','gift-card-photo')" />
+                    </span>
+                    <input type="hidden" class="upload-image-val" id="gift-card-val">
+                    <div class="clear"></div>
+                    <div class="upload-image-tips">
+                        已设别的文字:<span></span>
+                        <input type="hidden" class="upload-image-input" name="gift_code_num" value="">
+                    </div>
+                </div>
+
+            </div>
+
+            <!--礼品码选择照片 end-->
+            <!-- 礼品卡号选择照片 start -->
+            <div class="form-group">
+                <div class="upload-image">
+                    <img id="gift-code-photo"  class="upload-image-photo" src="../static/images/icon-user.png"/>
+                    <span class="fileinput-button">
+                    <span>礼品卡号选择照片/拍照上传</span>
+                    <input class="gift-code upload-image-file" id="gift-code" type="file" accept="image/*" capture="user" name="gift_code" onchange="uploadImage('gift-code','gift-code-photo')" />
+                    </span>
+                    <input type="hidden" class="upload-image-val" id="gift-code-val">
+                    <div class="clear"></div>
+                    <div class="upload-image-tips">
+                        已设别的文字:<span></span>
+                        <input type="hidden" class="upload-image-input" name="gift_card_num" value="">
+                    </div>
+                </div>
+            </div>
+            <!-- 礼品卡号选择照片 end -->
+            <div class="form-group" style="padding-left:.5rem;line-height: .48rem;font-size: .18rem;color: #000000">
+                <label for="gift-amount">选择礼品卡金额</label><br>
+                <input type="radio" value="500" name="gift_amount">500元
+                <input type="radio" value="99" name="gift_amount">99元
+                <input type="radio" value="200" name="gift_amount">200元
+                <input type="radio" value="199" name="gift_amount">199元
+            </div>
+            <div class="form-group form-submit">
+                <button type="submit" class="small-blue" onclick="saveCard('#save-card')">保 存</button>
+            </div>
+        </form>
+        <!--form end-->
+    </div>
+</div>
+
+<script type="text/javascript">
+    function saveCard(formid)
+    {
+        $.ajax({
+            //几个参数需要注意一下
+            type: "POST",//方法类型
+            dataType: "json",//预期服务器返回的数据类型
+            url: "/webimage/saveCard" ,//url
+            data: $(formid).serialize(),
+            success: function (result) {
+                let data = result.result
+                if (result.code == 200){
+                    layer.open({
+                        content: result.msg
+                        ,btn: '我知道了'
+                    });
+                }else{
+                    layer.open({
+                        content: result.msg
+                        ,btn: '我知道了'
+                    });
+                    return false
+                }
+                console.log(result);//打印服务端返回的数据(调试用)
+            },
+            error : function() {
+                alert("异常！");
+            }
+        });
+    }
+    // upload
+    function uploadImage(fileId,imgid,imgValId)
+    {
+        chooseImage(fileId,imgid,imgValId)
+    }
+    // choose-image
+    function chooseImage(fileid, imgid, fileValId) {
+        var fileObj = document.getElementById(fileid);
+        if (typeof (fileObj) == "undefined" || fileObj.files.length == 0) {
+            console.log('file ' + fileid + ' not exists');
+            return;
+        }
+        var file = fileObj.files[0];
+        // ajax upload image
+        var formData = new FormData();
+        formData.append("file",file)
+        $.ajax({
+            //请求方式
+            type : "POST",
+            //请求的媒体类型
+            contentType: false,
+            processData: false,
+            dataType:"json",
+            //请求地址
+            url : "/webimage/uploadImage",
+            //数据，json字符串
+            data :formData,
+            //请求成功
+            success : function(result) {
+                if(result.code == 200){
+                    $('#'+fileid).parent().siblings('.upload-image-tips').show()
+                    $('#'+fileid).parent().siblings('.upload-image-tips').children('span').html(result.result.words_result)
+                    $('#'+fileid).parent().siblings('.upload-image-tips').children('.upload-image-input').val(result.result.words_result)
+                }else{
+                    $('#'+fileid).parent().siblings('.upload-image-tips').hide()
+                }
+            },
+            //请求失败，包含具体的错误信息
+            error : function(e){
+                console.log(e.status);
+                console.log(e.responseText);
+            }
+        });
+
+        var reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function (e) {
+            var imgResult = e.target.result;
+            var imgObj = document.getElementById(imgid);
+            if (typeof (imgObj) != "undefined") {
+                imgObj.setAttribute("src", imgResult);
+            }
+            var fileValObj = document.getElementById(fileValId);
+            if (typeof (fileValObj) != "undefined") {
+                fileValObj.setAttribute("value", imgResult);
+            }
+        };
+    };
+
+</script>
+
+</div>
+</body>
+</html>

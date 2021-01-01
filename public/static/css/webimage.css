@@ -1,0 +1,65 @@
+.container{
+    width: 7.5rem;
+    margin: 0 auto;
+    font-size: .20rem;
+}
+.form-group{
+    width: 7rem;
+    padding: .2rem 0rem;
+    line-height: 2rem;
+    margin: 0 auto;
+}
+.form-submit{
+    position: relative;
+    text-align: center;
+    top: 1.2rem;
+}
+
+.small-blue{
+    width: 2rem;
+    color: #f4f4f4;
+    border:.01rem solid #1e7db9;
+    box-shadow: 0 .01rem .02rem #8fcaee  inset,0 -.01rem 0 #497897 inset,0 -.02rem .03rem #8fcaee inset;
+    background: -webkit-linear-gradient(top,#42a4e0,#2e88c0);
+    background: -moz-linear-gradient(top,#42a4e0,#2e88c0);
+    background: linear-gradient(top,#42a4e0,#2e88c0);
+}
+.upload-image .upload-image-photo{
+    width: 1.5rem;
+    padding: .1rem .1rem;
+}
+
+.fileinput-button {
+    position: relative;
+    float: left;
+    width: 4rem;
+    height: 2rem;
+    color:#06ba03;
+    font-size: .2rem;
+    font-family: "Arial", "SimSun";
+    font-weight: bold;
+    text-align: center;
+    display: inline-block;
+}
+.fileinput-button input{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    opacity: 0;
+    -ms-filter: 'alpha(opacity=0)';
+    font-size: 1.5rem;
+}
+.clear{
+    clear: both;
+}
+.upload-image-tips{
+    position: relative;
+    display: none;
+    width: 7rem;
+    height: .6rem;
+    line-height: .6rem;
+    bottom: 0rem;
+    background: #ffffff;
+    text-align: center;
+    color: #000000;
+}
