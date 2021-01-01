@@ -17,6 +17,8 @@ go mod tidy
 
 # 编译
 go build
+# nohup执行~
+nohup ./main &
 ```
                                 
 - 开发环境 
