@@ -34,8 +34,6 @@ type ConnInfo struct {
 	Db string
 }
 
-
-var myTemplate *template.Template
 // return data
 type returnData struct {
 	Code int `json:"code"`
@@ -80,7 +78,7 @@ func DbConn(MyUser, Password, Host, Db string, Port int) *gorm.DB {
 	db.SingularTable(true)
 	return db
 }
-
+// load webimageInfo
 func webimageInfo(w http.ResponseWriter,r *http.Request) {
 	bytes, err := asset.Asset("public/view/webimage.html")  // 根据地址获取对应内容
 	if err != nil {
@@ -95,30 +93,6 @@ func webimageInfo(w http.ResponseWriter,r *http.Request) {
 	var fileList = make(map[string]interface{})
 
 	t.Execute(w, fileList)
-
-	//myTemplate.Execute(w, struct {
-	//
-	//}{})
-}
-
-func initTemplate(fileName string) (err error){
-	myTemplate,err  = template.ParseFiles(fileName)
-	if err != nil{
-		fmt.Println("parse file err:",err)
-		return
-	}
-	return
-}
-
-// home
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	p := &returnData{}
-	p.Code = 200
-	p.Msg = "success~"
-	returnMap := make(map[string]interface{})
-	p.Result = returnMap
-	data, _ := json.Marshal(p)
-	fmt.Fprintln(w,string(data))
 }
 
 // save card info
@@ -350,9 +324,6 @@ func main()  {
 	}
 
 	http.Handle("/", http.FileServer(&fs))
-
-	//initTemplate("public/view/webimage.html")
-
 	http.HandleFunc("/webimage", webimageInfo)
 	http.HandleFunc("/webimage/uploadImage",uploadImage) //upload image~
 	http.HandleFunc("/webimage/saveCard",saveCard) //save card~
