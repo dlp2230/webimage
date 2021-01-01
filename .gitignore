@@ -1,0 +1,11 @@
+.idea/
+.DS_Store
+
+go.sum
+/log/
+/gva
+/latest_log
+
+*.iml
+config.yaml
+*.exe
