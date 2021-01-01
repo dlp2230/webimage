@@ -80,13 +80,6 @@ const (
 	upload_path string = "/expocraftsmen/"
 )
 
-var (
-	ACCESS_KEY = "CKzFTFiQ91LG0kin8_c-eOs8uCSxOn2HGykp5dmr"
-	SECRET_KEY = "uCMwldThLJNb0wZsAZqxPVyZBY2pZ5SCmgP7uXBn"
-	BUCKET     = "expocraftsmen"
-	IMAGE_PATH = "https://expo-img.expocraftsmen.com/"
-)
-
 func init() {
 	path, err := os.Getwd()
 	if err != nil {
