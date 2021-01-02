@@ -88,15 +88,15 @@ func init() {
 		GVA_LOG.Error("Mapping configuration file failed:",zap.Any("err",err))
 	}
 
-	DBS = DbConn(GVA_CONFIG.Mysql.Username,GVA_CONFIG.Mysql.Password,GVA_CONFIG.Mysql.Host,GVA_CONFIG.Mysql.Dbname,GVA_CONFIG.Mysql.Port)
+	DBS = DbConn(GVA_CONFIG.Mysql.Username,GVA_CONFIG.Mysql.Password,GVA_CONFIG.Mysql.Host,GVA_CONFIG.Mysql.Dbname,GVA_CONFIG.Mysql.Port,GVA_CONFIG.Mysql.Config)
 	DBS.DB().SetMaxIdleConns(GVA_CONFIG.Mysql.MaxIdleConns)                   // Maximum number of idle connections
 	DBS.DB().SetMaxOpenConns(GVA_CONFIG.Mysql.MaxOpenConns)                   // maximum connection
 	DBS.DB().SetConnMaxLifetime(time.Second * 300)                            // Set connection idle timeout
 	DBS.LogMode(GVA_CONFIG.Mysql.LogMode)
 }
 
-func DbConn(MyUser, Password, Host, Db string, Port int) *gorm.DB {
-	connArgs := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",  MyUser,Password, Host, Port, Db )
+func DbConn(MyUser, Password, Host, Db string, Port int,Config string) *gorm.DB {
+	connArgs := fmt.Sprintf("%s:%s@(%s:%d)/%s?%s",  MyUser,Password, Host, Port, Db, Config )
 	db, err := gorm.Open("mysql", connArgs)
 	if err != nil {
 		GVA_LOG.Error("MySQL link failed:",zap.Any("err",err))
