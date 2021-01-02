@@ -39,7 +39,7 @@ type (
 	}
 	System struct {
 		Env           string `mapstructure:"env" json:"env" yaml:"env"`
-		Addr          string `mapstructure:"addr" json:"addr" yaml:"addr"`
+		Addr          int `mapstructure:"addr" json:"addr" yaml:"addr"`
 	}
 	Mysql struct {
 		Host         string `mapstructure:"host" json:"Host" yaml:"host"`
@@ -154,8 +154,8 @@ func saveCard(w http.ResponseWriter, r *http.Request)  {
 		CardDiscountCode  	string `json:"card_discount_code"`
 		CardNumber    		string  `json:"card_number"`
 		CardMount			float64	`json:"card_mount"`
-		CardBalance			float64  `json:"card_balance"`
-		CreatedTime			interface{}
+		CardBalance			float64 `json:"card_balance"`
+		CreatedTime			int64
 	}
 	var createdTime = time.Now().UTC().Unix()
 	giftcardsInfo := &Giftcards{
@@ -303,12 +303,8 @@ func getBaiduAccessToken() (accessToken string) {
 	}
 	body,_ := resp.GetBody()
 	type BaiduRespnseData struct {
-		RefreshToken 	string 	`json:"refresh_token"`
 		ExpiresIn  		uint  	`json:"expires_in"`
-		SessionKey  	string 	`json:"session_key"`
 		AccessToken		string	`json:"access_token"`
-		Scope			string  `json:"scope"`
-		SessionSecret	string	`json:"session_secret"`
 	}
 	returnData :=&BaiduRespnseData{}
 	json.Unmarshal([]byte(body),&returnData)
@@ -328,6 +324,6 @@ func main()  {
 	http.HandleFunc("/webimage/uploadImage",uploadImage) // upload image~
 	http.HandleFunc("/webimage/saveCard",saveCard) // save card~
 
-	http.ListenAndServe(":"+GVA_CONFIG.System.Addr, nil)
+	http.ListenAndServe(":"+strconv.Itoa(GVA_CONFIG.System.Addr), nil)
 
 }
