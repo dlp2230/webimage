@@ -20,9 +20,7 @@ import (
 	"time"
 	"webimage/asset"
 )
-const (
-	upload_path string = "/expo/"
-)
+
 var (
 	DBM *gorm.DB
 	DBS *gorm.DB
@@ -55,6 +53,7 @@ type (
 	Qiniu struct {
 		Zone          string `mapstructure:"zone" json:"zone" yaml:"zone"`
 		Bucket        string `mapstructure:"bucket" json:"bucket" yaml:"bucket"`
+		Local         string `mapstructure:"local" json:"local" yaml:"local"`
 		ImgPath       string `mapstructure:"img-path" json:"imgPath" yaml:"img-path"`
 		UseHTTPS      bool   `mapstructure:"use-https" json:"useHttps" yaml:"use-https"`
 		AccessKey     string `mapstructure:"access-key" json:"accessKey" yaml:"access-key"`
@@ -193,11 +192,11 @@ func uploadImage(w http.ResponseWriter, r *http.Request)  {
 	// create Dir
 	pwd, _ := os.Getwd()
 	// If the folder exists, an error will be returned. You can use the`_ `Throw it out
-	err = os.Mkdir(pwd+upload_path, os.ModePerm)
+	err = os.Mkdir(pwd+GVA_CONFIG.Qiniu.Local, os.ModePerm)
 	if err != nil {
 		fmt.Println("dir is create Error")
 	}
-	fW, err := os.Create(pwd + upload_path + head.Filename)
+	fW, err := os.Create(pwd + GVA_CONFIG.Qiniu.Local + head.Filename)
 	if err != nil {
 		GVA_LOG.Error("File create failed:",zap.Any("err",err))
 	}
@@ -208,7 +207,7 @@ func uploadImage(w http.ResponseWriter, r *http.Request)  {
 	if err != nil {
 		GVA_LOG.Error("File save failed:",zap.Any("err",err))
 	}
-	imageUrl :=upload_qiniu(pwd + upload_path + head.Filename)
+	imageUrl :=upload_qiniu(pwd + GVA_CONFIG.Qiniu.Local + head.Filename)
 	url :="https://aip.baidubce.com/rest/2.0/ocr/v1/webimage?access_token="+getBaiduAccessToken()
 	cli := goz.NewClient()
 
