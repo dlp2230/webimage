@@ -5,11 +5,11 @@ system:
 
 # mysql config
 mysql:
-  host: "47.88.2.29"
-  config: 'charset=utf8&parseTime=True&loc=Local'
-  db-name: "applereservation"
-  username: "applereservation"
-  password: "Js3jjrMz2dWb7DnN"
+  host: "127.0.0.1"
+  config: 'charset=utf8mb4&parseTime=True&loc=Local'
+  db-name: "mp_main"
+  username: "root"
+  password: "123456"
   port: 3306
   max-idle-conns: 10
   max-open-conns: 100
@@ -18,15 +18,15 @@ mysql:
 # qiniu config
 qiniu:
   zone: "mp_main"
-  bucket: "expocraftsmen"
+  bucket: ""
   local: "/upload/"
-  img-path: "https://expo-img.expocraftsmen.com/"
+  img-path: ""
   use-https: false
-  access-key: "CKzFTFiQ91LG0kin8_c-eOs8uCSxOn2HGykp5dmr"
-  secret-key: "uCMwldThLJNb0wZsAZqxPVyZBY2pZ5SCmgP7uXBn"
+  access-key: ""
+  secret-key: ""
   use-cdn-domains: false
 
 # baidu ai
 baidu-ai:
-  app-key: 'bLmOZEzmmAIHZGojuWx4Ie4z'
-  app-secret-key: 'f7B6WYBS8WOwwhTarmNWj0cq2WuH5QY5'
+  app-key: ''
+  app-secret-key: ''
